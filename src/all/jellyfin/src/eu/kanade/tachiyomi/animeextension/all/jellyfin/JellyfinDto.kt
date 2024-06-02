@@ -44,6 +44,7 @@ data class ItemDto(
 
     // Only for series, not season
     @SerialName("Status") val seriesStatus: String? = null,
+    @SerialName("SeasonName") val seasonName: String? = null,
 
     // Episode
     @SerialName("PremiereDate") val premiereData: String? = null,
@@ -93,6 +94,14 @@ data class ItemDto(
                 httpUrl.fragment("movie")
                 title = name
             }
+            "BoxSet" -> {
+                httpUrl.fragment("boxSet")
+                title = name
+            }
+            "Series" -> {
+                httpUrl.fragment("series")
+                title = name
+            }
         }
 
         url = httpUrl.build().toString()
@@ -105,7 +114,12 @@ data class ItemDto(
         }
         genre = genres?.joinToString(", ")
         author = studios?.joinToString(", ") { it.name }
-        status = seriesStatus.parseStatus()
+
+        if (type == "Movie") {
+            status = SAnime.COMPLETED
+        } else {
+            status = seriesStatus.parseStatus()
+        }
     }
 
     private fun String?.parseStatus(): Int = when (this) {
@@ -122,15 +136,16 @@ data class ItemDto(
         apiKey: String,
         epDetails: Set<String>,
         epType: EpisodeType,
+        prefix: String,
     ): SEpisode = SEpisode.create().apply {
         when (epType) {
             EpisodeType.MOVIE -> {
                 episode_number = 1F
-                name = "Movie"
+                name = "${prefix}Movie"
             }
             EpisodeType.EPISODE -> {
                 episode_number = indexNumber?.toFloat() ?: 1F
-                name = "Ep. $indexNumber - ${this@ItemDto.name}"
+                name = "${prefix}Ep. $indexNumber - ${this@ItemDto.name}"
             }
         }
 
